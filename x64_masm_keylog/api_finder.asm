@@ -86,8 +86,6 @@ hash_match:
 fine:
     leave
     ret
-
 HashResolver ENDP
-
 end
 

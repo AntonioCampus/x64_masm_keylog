@@ -2,13 +2,13 @@
 EXTERN createfile  : QWORD
 EXTERN writefile   : QWORD
 EXTERN closehandle : QWORD
-.data
-    FILE_APPEND_DATA        EQU 00000004h
-    FILE_SHARE_READ         EQU 00000001h
+
+.code
+	FILE_APPEND_DATA        BYTE 4h
+    FILE_SHARE_READ         BYTE 1h
     OPEN_ALWAYS             EQU 00000004h
     FILE_ATTRIBUTE_NORMAL   EQU 00000080h
     INVALID_HANDLE_VALUE    EQU 0FFFFFFFFh
-.code
 ; ---------------------------------------------------;
 ;   This procedure write data to file                ;                              
 ;   first param : byte to be written                 ;
@@ -29,8 +29,8 @@ writeTofile PROC
     mov dword ptr[rsp+28h], FILE_ATTRIBUTE_NORMAL   ; sixth argument (second of the stack)
     mov dword ptr[rsp+20h], OPEN_ALWAYS             ; fifth argument (first of the stack)
     xor r9,r9                                       ; fourth argument
-    mov r8, FILE_SHARE_READ                         ; third argument
-    mov rdx,FILE_APPEND_DATA                        ; second argument
+    mov r8b, FILE_SHARE_READ                         ; third argument
+    mov dl,FILE_APPEND_DATA                        ; second argument
     mov rcx,qword ptr[rbp+18h]                      ; first argument, filename                  
     call createfile                                 ; call api function
     cmp rax,INVALID_HANDLE_VALUE                    ; check if return value is equal 0xffffffffff       

